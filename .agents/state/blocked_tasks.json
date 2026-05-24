@@ -1,0 +1,11 @@
+{
+  "tasks": [],
+  "total": 0,
+  "blocked_reasons": {
+    "waiting_user_input": [],
+    "waiting_dependency": [],
+    "risk_high": [],
+    "error_occurred": [],
+    "manual_review_required": []
+  }
+}

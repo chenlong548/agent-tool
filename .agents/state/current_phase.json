@@ -1,0 +1,10 @@
+{
+  "phase": "idle",
+  "workflow": "initialized",
+  "layer": "Layer 0 - Idle",
+  "skill": "",
+  "started_at": "",
+  "last_updated": "",
+  "status": "active",
+  "next_action": "execute_skill"
+}

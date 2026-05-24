@@ -1,0 +1,29 @@
+{
+  "total_retries": 0,
+  "max_total": 10,
+  "by_severity": {
+    "P0": {
+      "current": 0,
+      "max": 2,
+      "escalated": false
+    },
+    "P1": {
+      "current": 0,
+      "max": 3,
+      "escalated": false
+    },
+    "P2": {
+      "current": 0,
+      "max": 3,
+      "escalated": false
+    },
+    "P3": {
+      "current": 0,
+      "max": 1,
+      "escalated": false
+    }
+  },
+  "consecutive_failures": 0,
+  "last_escalation": "",
+  "history": []
+}

@@ -1,0 +1,11 @@
+{
+  "current_execution": null,
+  "last_execution": null,
+  "history": [],
+  "statistics": {
+    "total_executions": 0,
+    "successful": 0,
+    "failed": 0,
+    "retried": 0
+  }
+}

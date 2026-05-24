@@ -1,0 +1,23 @@
+# Logs and runtime state generated while using this repository as a test project
+.agents/logs/*.log
+.agents/logs/hot/*.log
+.agents/logs/warm/*.log
+.agents/logs/cold/*.log
+!.agents/logs/.gitkeep
+!.agents/logs/hot/.gitkeep
+!.agents/logs/warm/.gitkeep
+!.agents/logs/cold/.gitkeep
+
+# Local editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Temporary archives and build output
+*.zip
+*.tar.gz
+dist/
+build/
+tmp/
+temp/

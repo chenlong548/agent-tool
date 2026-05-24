@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  smoke-test:
+    name: PowerShell smoke test
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run CLI smoke test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          & .\core\agent.ps1 help
+
+          $tmp = Join-Path $env:RUNNER_TEMP ("agent-tool-smoke-" + [guid]::NewGuid().ToString("N"))
+          New-Item -ItemType Directory -Path $tmp | Out-Null
+          Push-Location $tmp
+          try {
+            & "$env:GITHUB_WORKSPACE\core\agent.ps1" init
+            & "$env:GITHUB_WORKSPACE\core\agent.ps1" status
+            & "$env:GITHUB_WORKSPACE\core\agent.ps1" phase next understanding
+            $skillCount = (Get-ChildItem ".agents\skills" -Directory).Count
+            if ($skillCount -ne 12) {
+              throw "Expected 12 skills, found $skillCount"
+            }
+            foreach ($path in @(
+              ".agents\state\blocked_tasks.json",
+              ".agents\state\risk_registry.json",
+              "AGENTS.md",
+              "CLAUDE.md",
+              ".github\copilot-instructions.md"
+            )) {
+              if (-not (Test-Path $path)) {
+                throw "Missing expected initialized file: $path"
+              }
+            }
+          } finally {
+            Pop-Location
+          }

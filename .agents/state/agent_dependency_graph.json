@@ -1,0 +1,114 @@
+{
+  "version": "4.0",
+  "description": "Agent Dependency Graph - defines input/output dependencies between skills",
+  "agents": {
+    "ENGINEERING_MEMORY_MANAGER": {
+      "layer": 0,
+      "thinking_mode": "both",
+      "required_inputs": [],
+      "produces_outputs": ["logs", "adr"],
+      "depends_on": [],
+      "blocks": []
+    },
+    "PRD_ANALYZER": {
+      "layer": 1,
+      "thinking_mode": "slow",
+      "required_inputs": ["raw_prd"],
+      "produces_outputs": ["docs/REQUIREMENTS.md"],
+      "depends_on": [],
+      "blocks": ["PLANNING_ALIGNMENT_AGENT", "PROJECT_PLANNER"]
+    },
+    "SOURCE_CODE_ANALYZER": {
+      "layer": 1,
+      "thinking_mode": "slow",
+      "required_inputs": ["existing_codebase"],
+      "produces_outputs": ["docs/SYSTEM_UNDERSTANDING.md"],
+      "depends_on": [],
+      "blocks": ["CHANGE_REQUIREMENTS_ANALYZER", "CHANGE_PLANNER"]
+    },
+    "CHANGE_REQUIREMENTS_ANALYZER": {
+      "layer": 1,
+      "thinking_mode": "slow",
+      "required_inputs": ["change_request"],
+      "produces_outputs": ["docs/CHANGE_REQUIREMENTS.md"],
+      "depends_on": ["SOURCE_CODE_ANALYZER"],
+      "blocks": ["PLANNING_ALIGNMENT_AGENT", "CHANGE_PLANNER"]
+    },
+    "PLANNING_ALIGNMENT_AGENT": {
+      "layer": 1.5,
+      "thinking_mode": "slow",
+      "required_inputs": ["docs/REQUIREMENTS.md", "docs/CHANGE_REQUIREMENTS.md"],
+      "produces_outputs": ["docs/PLANNING_ALIGNMENT_QUESTIONS.md", "docs/HUMAN_CONFIRMATION_CHECKLIST.md", "docs/MVP_SCOPE_BOUNDARY.md"],
+      "depends_on": ["PRD_ANALYZER", "CHANGE_REQUIREMENTS_ANALYZER"],
+      "blocks": ["PROJECT_PLANNER", "CHANGE_PLANNER"]
+    },
+    "PROJECT_PLANNER": {
+      "layer": 2,
+      "thinking_mode": "slow",
+      "required_inputs": ["docs/REQUIREMENTS.md", "docs/HUMAN_CONFIRMATION_CHECKLIST.md", "docs/MVP_SCOPE_BOUNDARY.md"],
+      "produces_outputs": ["docs/PROJECT_PLAN.md"],
+      "depends_on": ["PRD_ANALYZER", "PLANNING_ALIGNMENT_AGENT"],
+      "blocks": ["EXECUTION_ORCHESTRATOR"]
+    },
+    "CHANGE_PLANNER": {
+      "layer": 2,
+      "thinking_mode": "slow",
+      "required_inputs": ["docs/SYSTEM_UNDERSTANDING.md", "docs/CHANGE_REQUIREMENTS.md"],
+      "produces_outputs": ["docs/MODIFICATION_PLAN.md"],
+      "depends_on": ["SOURCE_CODE_ANALYZER", "CHANGE_REQUIREMENTS_ANALYZER"],
+      "blocks": ["EXECUTION_ORCHESTRATOR"]
+    },
+    "EXECUTION_ORCHESTRATOR": {
+      "layer": 3,
+      "thinking_mode": "fast",
+      "required_inputs": ["docs/PROJECT_PLAN.md", "docs/MODIFICATION_PLAN.md"],
+      "produces_outputs": ["project/"],
+      "depends_on": ["PROJECT_PLANNER", "CHANGE_PLANNER"],
+      "blocks": ["QA_REVIEW_AGENT"]
+    },
+    "QA_REVIEW_AGENT": {
+      "layer": 4,
+      "thinking_mode": "both",
+      "required_inputs": ["project/"],
+      "produces_outputs": ["docs/CODE_REVIEW_REPORT.md", "docs/QA_AUDIT_REPORT.md"],
+      "depends_on": ["EXECUTION_ORCHESTRATOR"],
+      "blocks": ["REPAIR_ORCHESTRATOR", "RELEASE_ORCHESTRATOR"]
+    },
+    "REPAIR_ORCHESTRATOR": {
+      "layer": 3.5,
+      "thinking_mode": "fast",
+      "required_inputs": ["docs/CODE_REVIEW_REPORT.md", "docs/QA_AUDIT_REPORT.md"],
+      "produces_outputs": ["docs/REPAIR_PLAN.md", "docs/REGRESSION_REPORT.md"],
+      "depends_on": ["QA_REVIEW_AGENT"],
+      "blocks": ["EXECUTION_ORCHESTRATOR"]
+    },
+    "RELEASE_ORCHESTRATOR": {
+      "layer": 5,
+      "thinking_mode": "fast",
+      "required_inputs": ["docs/QA_AUDIT_REPORT.md"],
+      "produces_outputs": ["docs/RELEASE_EXECUTION_LOG.md", "deployment"],
+      "depends_on": ["QA_REVIEW_AGENT"],
+      "blocks": []
+    },
+    "AI_ENGINEERING_ORCHESTRATOR": {
+      "layer": 6,
+      "thinking_mode": "both",
+      "required_inputs": [],
+      "produces_outputs": ["workflow_coordination"],
+      "depends_on": [],
+      "blocks": []
+    }
+  },
+  "dependency_chains": {
+    "greenfield": ["PRD_ANALYZER", "PLANNING_ALIGNMENT_AGENT", "PROJECT_PLANNER", "EXECUTION_ORCHESTRATOR", "QA_REVIEW_AGENT", "RELEASE_ORCHESTRATOR"],
+    "greenfield_with_repair": ["PRD_ANALYZER", "PLANNING_ALIGNMENT_AGENT", "PROJECT_PLANNER", "EXECUTION_ORCHESTRATOR", "QA_REVIEW_AGENT", "REPAIR_ORCHESTRATOR", "EXECUTION_ORCHESTRATOR", "QA_REVIEW_AGENT", "RELEASE_ORCHESTRATOR"],
+    "brownfield": ["SOURCE_CODE_ANALYZER", "CHANGE_REQUIREMENTS_ANALYZER", "CHANGE_PLANNER", "EXECUTION_ORCHESTRATOR", "QA_REVIEW_AGENT", "RELEASE_ORCHESTRATOR"],
+    "brownfield_with_repair": ["SOURCE_CODE_ANALYZER", "CHANGE_REQUIREMENTS_ANALYZER", "CHANGE_PLANNER", "EXECUTION_ORCHESTRATOR", "QA_REVIEW_AGENT", "REPAIR_ORCHESTRATOR", "EXECUTION_ORCHESTRATOR", "QA_REVIEW_AGENT", "RELEASE_ORCHESTRATOR"]
+  },
+  "escalation_paths": {
+    "retry_exceeded": "REPAIR_ORCHESTRATOR -> human_escalation",
+    "architecture_failure": "REPAIR_ORCHESTRATOR -> PLANNING_ALIGNMENT_AGENT -> human_confirmation",
+    "business_logic_failure": "REPAIR_ORCHESTRATOR -> PLANNING_ALIGNMENT_AGENT -> human_confirmation",
+    "security_failure": "REPAIR_ORCHESTRATOR -> human_escalation"
+  }
+}

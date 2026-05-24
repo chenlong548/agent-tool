@@ -1,0 +1,6 @@
+read:
+  - AGENTS.md
+  - .agents/rules/workflow_rules.md
+
+attribute-author: false
+attribute-committer: false

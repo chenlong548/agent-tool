@@ -1,0 +1,11 @@
+{
+  "risks": [],
+  "total": 0,
+  "by_severity": {
+    "critical": [],
+    "high": [],
+    "medium": [],
+    "low": []
+  },
+  "mitigation_required": []
+}
