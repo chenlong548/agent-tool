@@ -29,6 +29,8 @@ Layer 4 ─── QA_REVIEW_AGENT ───────────────�
     │
 Layer 3 ─── EXECUTION_ORCHESTRATOR ────────────── Code Execution
     │
+Layer 3.5 ─ REPAIR_ORCHESTRATOR ──────────────── Repair & Recovery
+    │
 Layer 2 ─── PROJECT_PLANNER, CHANGE_PLANNER ───── Planning
     │
 Layer 1.5 ─ PLANNING_ALIGNMENT_AGENT ──────────── Human Alignment & Validation
@@ -41,7 +43,7 @@ Layer 0 ─── ENGINEERING_MEMORY_MANAGER ────────── Memo
 
 ## Thinking Modes
 
-### 🧠 Slow Thinking (GPT/ChatGPT)
+### Slow Thinking (GPT/ChatGPT)
 **Responsible for**: Understanding, Alignment, Planning, Architecture, Review, Risk
 
 **Reads from**:
@@ -57,8 +59,9 @@ Layer 0 ─── ENGINEERING_MEMORY_MANAGER ────────── Memo
 - PROJECT_PLANNER
 - CHANGE_PLANNER
 - QA_REVIEW_AGENT (review phase)
+- REPAIR_ORCHESTRATOR
 
-### ⚡ Fast Thinking (Codex/DeepSeek/TRAE)
+### Fast Thinking (Codex/DeepSeek/TRAE)
 **Responsible for**: Execution, Refactor, Implementation, Fix
 
 **Reads from**:
@@ -70,6 +73,7 @@ Layer 0 ─── ENGINEERING_MEMORY_MANAGER ────────── Memo
 - EXECUTION_ORCHESTRATOR
 - RELEASE_ORCHESTRATOR
 - QA_REVIEW_AGENT (execution phase)
+- REPAIR_ORCHESTRATOR
 
 ## Directory Structure
 
