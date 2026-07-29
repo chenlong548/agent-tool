@@ -17,8 +17,26 @@ description: "Execution orchestrator that executes PROJECT_PLAN or MODIFICATION_
 
 ## Output Directory
 
-All generated code must be written to the `project/` directory at the project root.
+**MANDATORY RULE**: All generated code MUST be written to the `project/` directory at the project root.
+
+**PROHIBITED ACTIONS**:
+- Creating directories at project root level (e.g., `app/`, `data/`, `src/`, `tests/`)
+- Writing code files outside of `project/` directory
+- Creating project structure directories outside of `project/`
+
+**ALLOWED STRUCTURE**:
+```
+project/
+├── src/              # Source code (allowed inside project/)
+├── tests/            # Test code (allowed inside project/)
+├── data/             # Data files (allowed inside project/)
+├── config/           # Config files (allowed inside project/)
+└── ...               # Any other project directories
+```
+
 All generated documents (reports, logs) must be written to the `docs/` directory.
+
+**VIOLATION CHECK**: Before writing any file, verify the path starts with `project/` or `docs/`.
 
 ## Responsibilities
 

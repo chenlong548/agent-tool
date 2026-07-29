@@ -29,6 +29,35 @@ This project uses a 7-layer AI engineering architecture with programmatic workfl
 - Do not ignore blocked transitions.
 - Do not assume architecture, stack, deployment, or AI provider choices without confirmation.
 - Do not modify files in `.agents/skills/` inside an initialized target project.
+- **Do not create code directories at project root level** (e.g., `app/`, `data/`, `src/`, `tests/`).
+- **All project code MUST be written to the `project/` directory** at the project root.
+- **Project structure directories can ONLY be created inside `project/`** (e.g., `project/src/`, `project/tests/`, `project/data/`).
+
+## Directory Structure Enforcement
+
+**MANDATORY Structure:**
+```
+project-root/
+├── .agents/          # Workflow state and skills (auto-generated)
+├── docs/             # Generated documents (auto-generated)
+├── project/          # ALL project code MUST go here
+│   ├── src/          # Source code (allowed inside project/)
+│   ├── tests/        # Test code (allowed inside project/)
+│   ├── data/         # Data files (allowed inside project/)
+│   └── config/       # Config files (allowed inside project/)
+└── AGENTS.md         # Workflow entry point
+```
+
+**PROHIBITED Structure:**
+```
+project-root/
+├── app/              # PROHIBITED at root level
+├── src/              # PROHIBITED at root level
+├── data/             # PROHIBITED at root level
+└── tests/            # PROHIBITED at root level
+```
+
+**VIOLATION CHECK**: Before creating any directory, verify it is inside `project/` or is a system directory (`.agents/`, `docs/`).
 
 ## Workflow Phases
 

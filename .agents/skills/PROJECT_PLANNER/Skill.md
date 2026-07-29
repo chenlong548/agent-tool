@@ -60,9 +60,20 @@ You MUST use ONLY the choices confirmed in the human alignment phase.
 - Establish technical standards
 
 ### Repository Structure
-- Design directory layout
-- Define module boundaries
-- Plan code organization
+- **MANDATORY**: All project code MUST be placed in the `project/` directory at the project root
+- **PROHIBITED**: Creating directories like `app/`, `data/`, `src/` at the project root level
+- Design directory layout within `project/` directory only
+- Define module boundaries within `project/` directory
+- Plan code organization within `project/` directory
+- Example structure:
+  ```
+  project/
+  ├── src/           (allowed inside project/)
+  ├── tests/         (allowed inside project/)
+  ├── data/          (allowed inside project/)
+  └── config/        (allowed inside project/)
+  ```
+- **VIOLATION**: Creating `app/` or `src/` at project root is a VIOLATION of workflow rules
 
 ### Prompt System
 - Design prompt templates
