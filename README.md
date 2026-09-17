@@ -106,6 +106,19 @@ agent phase next understanding
 
 Then open the generated `AGENTS.md` with your AI coding tool. The orchestrator will ask which workflow to run and load the matching skills.
 
+## Examples
+
+The `examples/` directory contains real assets from production use, published as reference
+implementations rather than toy samples:
+
+| Path | What it demonstrates |
+|---|---|
+| [`examples/skills/binary-reverse/`](examples/skills/binary-reverse/) | A skill that is a **routing decision tree** — identifies a binary, then picks the right decompiler out of six |
+| [`examples/rules/security-policy.md`](examples/rules/security-policy.md) | A rule file that is **prescriptive** — it names a specific auth-bypass failure mode instead of restating general advice |
+| [`examples/roles/agent-roles.md`](examples/roles/agent-roles.md) | **Role-scoped dispatch** — six specialists, where the security and test roles are deliberately not optimised for throughput |
+
+Start with [`examples/README.md`](examples/README.md) for the reasoning behind each.
+
 ## Commands
 
 | Command | Description |

@@ -21,3 +21,6 @@ dist/
 build/
 tmp/
 temp/
+
+# Vendored third-party project (has its own git repository; not part of this project)
+browser/browser-use/
