@@ -13,6 +13,15 @@
 - Fixed: entity ids for blocked tasks, risks and transitions used second resolution, so two records
   created in the same second shared an id and `agent unblock` / `agent risk resolve` could clear
   more than one record. Ids now carry millisecond precision plus a per-process sequence.
+- Fixed: `agent unblock <id>` and `agent risk resolve <id>` reported success for ids that did not
+  exist. They now report that nothing matched and exit non-zero, so a typo cannot silently read as
+  a resolved record.
+- Fixed: `agent risk list` claimed that open high risks block execution, validation and release.
+  Only critical risks block those phases; a high risk blocks release alone, by forcing the
+  deployment decision to `REQUIRES_REWORK`. The warning now states each severity's real effect.
+- Fixed: `agent phase back` accepted targets that are ordinary forward steps and recorded them as
+  feedback loops, inflating the feedback-loop metric and mistyping the transition log. It now only
+  accepts an earlier phase or a documented rework loop, and points at `phase next` otherwise.
 
 ## v4.0
 

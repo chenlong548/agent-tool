@@ -32,6 +32,18 @@ $phaseTransitions = @{
     "completed"  = @("idle")
 }
 
+# Legitimate rework transitions. `phase back` is for these plus any strictly earlier phase;
+# everything else it could be pointed at is a plain forward step, which must go through
+# `phase next` so the transition log and the workflow metrics record it as an advance
+# rather than as a feedback loop.
+$feedbackLoops = @(
+    "validation->execution", "validation->planning", "validation->alignment", "validation->repair",
+    "repair->execution", "repair->validation", "repair->planning", "repair->alignment",
+    "execution->planning", "execution->alignment",
+    "release->execution",
+    "completed->idle"
+)
+
 $phaseLabels = @{
     "idle"        = "Layer 0 - Idle"
     "understanding" = "Layer 1 - Understanding"
@@ -213,13 +225,15 @@ function Add-BlockedTask {
 function Remove-BlockedTask {
     param([string]$TaskId)
     $state = Get-JsonState -FilePath $blockedTasksFile -Default @{ tasks = @(); total = 0; blocked_reasons = @{ waiting_user_input = @(); waiting_dependency = @(); risk_high = @(); error_occurred = @(); manual_review_required = @() } }
+    $matched = @($state.tasks | Where-Object { $_.id -eq $TaskId }).Count
     $state.tasks = @($state.tasks | Where-Object { $_.id -ne $TaskId -and $_.status -ne "resolved" })
     foreach ($cat in $state.blocked_reasons.PSObject.Properties.Name) {
         $state.blocked_reasons.$cat = @($state.blocked_reasons.$cat | Where-Object { $_ -ne $TaskId })
     }
     $state.total = $state.tasks.Count
     Set-JsonState -FilePath $blockedTasksFile -Data $state
-    Write-Log "Blocked task resolved: $TaskId"
+    if ($matched -gt 0) { Write-Log "Blocked task resolved: $TaskId" }
+    return $matched
 }
 
 function Add-Risk {
@@ -250,6 +264,7 @@ function Add-Risk {
 function Resolve-Risk {
     param([string]$RiskId)
     $state = Get-JsonState -FilePath $riskRegistryFile -Default @{ risks = @(); total = 0; by_severity = @{ critical = @(); high = @(); medium = @(); low = @() }; mitigation_required = @() }
+    $matched = @($state.risks | Where-Object { $_.id -eq $RiskId }).Count
     $newRisks = @()
     foreach ($risk in $state.risks) {
         if ($risk.id -eq $RiskId) {
@@ -274,7 +289,8 @@ function Resolve-Risk {
         $state.by_severity.$sev = @($state.by_severity.$sev | Where-Object { $_ -ne $RiskId })
     }
     Set-JsonState -FilePath $riskRegistryFile -Data $state
-    Write-Log "Risk resolved: $RiskId"
+    if ($matched -gt 0) { Write-Log "Risk resolved: $RiskId" }
+    return $matched
 }
 
 function Get-DeploymentDecision {
@@ -884,6 +900,19 @@ if ($command -eq "init") {
             exit 1
         }
 
+        # `back` must actually go backwards (or be a documented rework loop). Without this,
+        # `phase back` happily performed a forward step and logged it as a feedback loop,
+        # which corrupted the transition type and the feedback-loop metric.
+        $backward = ([array]::IndexOf($validPhases, $targetPhase) -lt [array]::IndexOf($validPhases, $currentPhase))
+        if (-not $backward -and $feedbackLoops -notcontains "$currentPhase->$targetPhase") {
+            Write-Log "REJECTED: phase back to a non-earlier phase ($currentPhase -> $targetPhase)" "ERROR"
+            Write-Host "REJECTED: 'phase back' only moves to an earlier phase."
+            Write-Host "  Current:   $currentPhase"
+            Write-Host "  Requested: $targetPhase  (not earlier, and not a rework loop)"
+            Write-Host "Use the forward command instead: agent phase next $targetPhase"
+            exit 1
+        }
+
         Set-CurrentPhase -phase $targetPhase
         Record-PhaseTransition -From $currentPhase -To $targetPhase -Type "feedback" -Reason $reason
         Update-WorkflowMetrics -Action "feedback" -Details @{ from = $currentPhase; to = $targetPhase }
@@ -957,7 +986,12 @@ if ($command -eq "init") {
             Write-Host "Usage: agent risk resolve <risk-id>"
             exit 1
         }
-        Resolve-Risk -RiskId $riskId
+        $resolved = Resolve-Risk -RiskId $riskId
+        if ($resolved -eq 0) {
+            Write-Host "No risk with id '$riskId'."
+            Write-Host "Run 'agent risk list' to list current IDs."
+            exit 1
+        }
         Write-Host "Risk resolved: $riskId"
 
     } elseif ($subCommand -eq "list") {
@@ -979,7 +1013,12 @@ if ($command -eq "init") {
         $openHigh = @($state.risks | Where-Object { $_.severity -eq "high" -and $_.status -eq "open" }).Count
         if ($openCritical -gt 0 -or $openHigh -gt 0) {
             Write-Host "WARNING: $openCritical critical + $openHigh high risks are open."
-            Write-Host "These will BLOCK execution/validation/release phases."
+            if ($openCritical -gt 0) {
+                Write-Host "  critical -> BLOCKS execution, validation and release. Resolve with: agent risk resolve <id>"
+            }
+            if ($openHigh -gt 0) {
+                Write-Host "  high     -> BLOCKS release only, by forcing decision REQUIRES_REWORK."
+            }
         }
 
     } else {
@@ -1007,7 +1046,12 @@ if ($command -eq "init") {
         Write-Host "Use 'agent blocked' to see blocked task IDs"
         exit 1
     }
-    Remove-BlockedTask -TaskId $taskId
+    $removed = Remove-BlockedTask -TaskId $taskId
+    if ($removed -eq 0) {
+        Write-Host "No blocked task with id '$taskId'."
+        Write-Host "Run 'agent blocked' to list current IDs."
+        exit 1
+    }
     Write-Host "Task unblocked: $taskId"
 
 } elseif ($command -eq "blocked") {
