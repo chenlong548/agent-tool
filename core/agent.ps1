@@ -811,9 +811,16 @@ if ($command -eq "init") {
             foreach ($err in $errors) {
                 Write-Host "  - $err"
             }
-            $null = Add-BlockedTask -Reason "Phase transition blocked: $currentPhase -> $targetPhase" -Category "waiting_dependency" -Severity "P1" -Phase $targetPhase
+            # NOTE: a prerequisite failure is a gate rejection, not a blocked work item.
+            # Do NOT register it with Add-BlockedTask. Doing so creates a blocker that targets
+            # this same phase, and Test-PhasePrerequisites counts blocked tasks on the target
+            # phase as a blocking condition -- so the gate would keep refusing to open even
+            # after every prerequisite had been satisfied, and each retry would add one more.
+            # The audit trail belongs in the transition log and the metrics below.
             Record-PhaseTransition -From $currentPhase -To $targetPhase -Type "blocked" -Reason ($errors -join "; ")
             Update-WorkflowMetrics -Action "validation_failed" -Phase $targetPhase
+            Write-Host ""
+            Write-Host "Resolve the missing prerequisites above, then re-run: agent phase next $targetPhase"
             exit 1
         }
 
