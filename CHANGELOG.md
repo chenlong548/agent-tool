@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: `Add-Risk` / `Add-BlockedTask` return values were not captured at three call sites, so a
+  stray `System.Collections.Hashtable` was printed on screen and `Add-RetryAttempt` returned a
+  3-element array instead of a single object when escalation triggered.
+- Fixed: `agent phase next` registered a blocked task against the target phase whenever
+  prerequisites were missing. Because the prerequisite check also counts blocked tasks targeting
+  that phase, the gate could refuse to open even after every prerequisite had been satisfied, and
+  each retry added another blocker. Prerequisite failures are now recorded in the phase transition
+  log and workflow metrics only.
+- Fixed: entity ids for blocked tasks, risks and transitions used second resolution, so two records
+  created in the same second shared an id and `agent unblock` / `agent risk resolve` could clear
+  more than one record. Ids now carry millisecond precision plus a per-process sequence.
+
 ## v4.0
 
 - Added `REPAIR_ORCHESTRATOR` as Layer 3.5 for autonomous recovery and repair planning.

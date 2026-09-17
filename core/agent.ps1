@@ -177,11 +177,22 @@ function Get-ProjectCodeFiles {
     return @(Get-ChildItem -Path $projectDir -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne ".gitkeep" })
 }
 
+function New-EntityId {
+    # Second-resolution ids collided: two records created in the same second got the same id,
+    # which broke Remove-BlockedTask / Resolve-Risk (they filter by id and would clear both).
+    # Millisecond precision plus a per-process sequence makes the id unique; the sequence is what
+    # guarantees uniqueness inside one process, the milliseconds cover two processes racing.
+    param([string]$Prefix)
+    if (-not $script:idCounter) { $script:idCounter = 0 }
+    $script:idCounter++
+    return "{0}-{1}-{2:D2}" -f $Prefix, (Get-Date -Format 'yyyyMMdd-HHmmssfff'), $script:idCounter
+}
+
 function Add-BlockedTask {
     param([string]$Reason, [string]$Category = "waiting_user_input", [string]$Severity = "P1", [string]$Phase = "")
     $state = Get-JsonState -FilePath $blockedTasksFile -Default @{ tasks = @(); total = 0; blocked_reasons = @{ waiting_user_input = @(); waiting_dependency = @(); risk_high = @(); error_occurred = @(); manual_review_required = @() } }
     $task = @{
-        id = "BLK-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+        id = New-EntityId -Prefix "BLK"
         reason = $Reason
         category = $Category
         severity = $Severity
@@ -215,7 +226,7 @@ function Add-Risk {
     param([string]$Description, [string]$Severity = "high", [string]$Category = "architecture", [string]$Phase = "")
     $state = Get-JsonState -FilePath $riskRegistryFile -Default @{ risks = @(); total = 0; by_severity = @{ critical = @(); high = @(); medium = @(); low = @() }; mitigation_required = @() }
     $risk = @{
-        id = "RSK-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+        id = New-EntityId -Prefix "RSK"
         description = $Description
         severity = $Severity
         category = $Category
@@ -314,7 +325,7 @@ function Record-PhaseTransition {
     param([string]$From, [string]$To, [string]$Type = "forward", [string]$Reason = "")
     $state = Get-JsonState -FilePath $executionStateFile -Default @{ current_execution = $null; history = @(); statistics = @{ total_executions = 0; successful = 0; failed = 0; retried = 0 }; last_execution = $null }
     $entry = @{
-        id = "EXE-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+        id = New-EntityId -Prefix "EXE"
         from_phase = $From
         to_phase = $To
         transition_type = $Type
