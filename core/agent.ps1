@@ -542,8 +542,8 @@ function Add-RetryAttempt {
     Set-JsonState -FilePath $retryBudgetFile -Data $budget
 
     if ($escalationNeeded) {
-        Add-Risk -Description "ESCALATION: $escalationReason" -Severity "critical" -Category "retry_budget"
-        Add-BlockedTask -Reason "Human escalation required: $escalationReason" -Category "risk_high" -Severity "P0" -Phase "repair"
+        $null = Add-Risk -Description "ESCALATION: $escalationReason" -Severity "critical" -Category "retry_budget"
+        $null = Add-BlockedTask -Reason "Human escalation required: $escalationReason" -Category "risk_high" -Severity "P0" -Phase "repair"
         Write-Log "ESCALATION TRIGGERED: $escalationReason" "CRITICAL"
     }
 
@@ -811,7 +811,7 @@ if ($command -eq "init") {
             foreach ($err in $errors) {
                 Write-Host "  - $err"
             }
-            Add-BlockedTask -Reason "Phase transition blocked: $currentPhase -> $targetPhase" -Category "waiting_dependency" -Severity "P1" -Phase $targetPhase
+            $null = Add-BlockedTask -Reason "Phase transition blocked: $currentPhase -> $targetPhase" -Category "waiting_dependency" -Severity "P1" -Phase $targetPhase
             Record-PhaseTransition -From $currentPhase -To $targetPhase -Type "blocked" -Reason ($errors -join "; ")
             Update-WorkflowMetrics -Action "validation_failed" -Phase $targetPhase
             exit 1
