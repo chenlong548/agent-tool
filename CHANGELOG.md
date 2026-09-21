@@ -22,6 +22,11 @@
 - Fixed: `agent phase back` accepted targets that are ordinary forward steps and recorded them as
   feedback loops, inflating the feedback-loop metric and mistyping the transition log. It now only
   accepts an earlier phase or a documented rework loop, and points at `phase next` otherwise.
+- Fixed: `agent repair fail` had no phase guard, unlike `repair start` and `repair complete`. It
+  therefore recorded a failed repair attempt from any phase at all — including a freshly initialised
+  project, where it consumed retry budget and moved the failure counters for a repair cycle that had
+  never started, leaving the retry and feedback metrics describing work that did not happen. It is now
+  restricted to the `repair` and `execution` phases.
 
 ## v4.0
 

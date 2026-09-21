@@ -1114,6 +1114,20 @@ if ($command -eq "init") {
         Write-Host "Next: agent phase next validation (re-validate) or agent phase next execution (apply more fixes)"
 
     } elseif ($subCommand -eq "fail") {
+        # NOTE: a failed repair attempt is a fact about a repair cycle, so it can
+        # only be recorded from a phase where a repair is actually being attempted.
+        # Without this guard the command recorded a failure from any phase at all --
+        # `agent repair fail` on a freshly initialised project consumed retry budget
+        # and moved the failure counters for a repair that had never started, which
+        # made the retry and feedback metrics describe work that did not happen.
+        # `repair start` permits entry from validation or repair; execution is the
+        # documented phase for applying fixes during a cycle (`repair start` prints it).
+        $currentPhase = Get-CurrentPhase
+        if ($currentPhase -ne "repair" -and $currentPhase -ne "execution") {
+            Write-Host "ERROR: A failed repair attempt is recorded from repair or execution phase. Current: $currentPhase"
+            Write-Host "Enter a repair cycle with: agent repair start (allowed from validation or repair)"
+            exit 1
+        }
         $severity = if ($args.Length -ge 3) { [string]$args[2] } else { "P1" }
         $description = if ($args.Length -ge 4) { $args[3..($args.Length-1)] -join " " } else { "Repair attempt failed" }
         $retryResult = Add-RetryAttempt -Severity $severity -Description $description -Result "failed"
