@@ -10,21 +10,28 @@ This project uses a 7-layer AI engineering architecture with programmatic workfl
 2. Before creating `docs/PROJECT_PLAN.md`, run `agent validate planning`.
    Planning must remain blocked until human confirmation artifacts are complete.
 
-3. Before advancing to another phase, run `agent phase next <phase>`.
+3. Before writing any frontend/UI code, verify `docs/UI_STYLE_CONFIRMATION.md` is fully
+   confirmed (presentation form + aesthetic direction chosen by the human) and
+   `docs/UI_UX_SPEC.md` exists.
+   Execution is blocked until Layer 2.5 (UI/UX Design) records the confirmed decisions.
+
+4. Before advancing to another phase, run `agent phase next <phase>`.
    Do not proceed when the command reports `BLOCKED`.
 
-4. Before release, run `agent decision`.
+5. Before release, run `agent decision`.
    Do not deploy when the decision is `BLOCK_RELEASE` or `REQUIRES_REWORK`.
 
-5. When risks are discovered, run `agent risk add <severity> <description>`.
+6. When risks are discovered, run `agent risk add <severity> <description>`.
    Critical and high risks must be resolved before execution, validation, or release.
 
-6. When manual review is needed, run `agent block <reason>`.
+7. When manual review is needed, run `agent block <reason>`.
 
 ## Prohibited Actions
 
 - Do not skip workflow phases.
 - Do not write implementation code before planning is complete.
+- Do not write frontend/UI code that deviates from `docs/UI_UX_SPEC.md`.
+- Do not choose presentation form or aesthetic style autonomously; the human confirms both in `docs/UI_STYLE_CONFIRMATION.md`.
 - Do not generate a project plan without human confirmation.
 - Do not ignore blocked transitions.
 - Do not assume architecture, stack, deployment, or AI provider choices without confirmation.
@@ -62,7 +69,7 @@ project-root/
 ## Workflow Phases
 
 ```text
-idle -> understanding -> alignment -> planning -> execution -> validation -> repair -> release -> completed
+idle -> understanding -> alignment -> planning -> design -> execution -> validation -> repair -> release -> completed
 ```
 
 ## Key Commands

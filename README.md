@@ -7,7 +7,7 @@ The goal is simple: make AI-assisted engineering less ad hoc by forcing clear ph
 ## What It Provides
 
 - 7-layer AI engineering architecture
-- 12 built-in skills
+- 13 built-in skills
 - Slow/Fast Thinking workflow separation
 - Human alignment gate before planning
 - Programmatic phase transitions
@@ -25,6 +25,7 @@ Layer 5   RELEASE_ORCHESTRATOR            Release and production readiness
 Layer 4   QA_REVIEW_AGENT                 Validation and product reality audit
 Layer 3.5 REPAIR_ORCHESTRATOR             Repair, retry, regression protection
 Layer 3   EXECUTION_ORCHESTRATOR          Implementation
+Layer 2.5 UI_UX_DESIGNER                  Presentation form analysis and UI/UX design
 Layer 2   PROJECT_PLANNER, CHANGE_PLANNER Planning
 Layer 1.5 PLANNING_ALIGNMENT_AGENT        Human alignment
 Layer 1   PRD_ANALYZER, SOURCE_CODE_ANALYZER,
@@ -42,6 +43,7 @@ PRD
   -> PLANNING_ALIGNMENT_AGENT
   -> Human Confirmation
   -> PROJECT_PLANNER
+  -> UI_UX_DESIGNER
   -> EXECUTION_ORCHESTRATOR
   -> QA_REVIEW_AGENT
   -> REPAIR_ORCHESTRATOR (when needed)
@@ -56,6 +58,7 @@ Existing code + change request
   -> CHANGE_REQUIREMENTS_ANALYZER
   -> PLANNING_ALIGNMENT_AGENT (for high-impact changes)
   -> CHANGE_PLANNER
+  -> UI_UX_DESIGNER
   -> EXECUTION_ORCHESTRATOR
   -> QA_REVIEW_AGENT
   -> REPAIR_ORCHESTRATOR (when needed)
@@ -150,7 +153,7 @@ Start with [`examples/README.md`](examples/README.md) for the reasoning behind e
 ## Phase Model
 
 ```text
-idle -> understanding -> alignment -> planning -> execution -> validation -> repair -> release -> completed
+idle -> understanding -> alignment -> planning -> design -> execution -> validation -> repair -> release -> completed
 ```
 
 Supported feedback loops:
@@ -158,13 +161,16 @@ Supported feedback loops:
 - `validation -> execution`
 - `validation -> planning`
 - `validation -> alignment`
+- `validation -> design`
 - `validation -> repair`
 - `repair -> execution`
 - `repair -> validation`
 - `repair -> planning`
 - `repair -> alignment`
+- `repair -> design`
 - `execution -> planning`
 - `execution -> alignment`
+- `execution -> design`
 - `release -> execution`
 
 ## Generated Project Structure

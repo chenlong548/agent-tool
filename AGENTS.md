@@ -31,6 +31,8 @@ Layer 3 ─── EXECUTION_ORCHESTRATOR ─────────────
     │
 Layer 3.5 ─ REPAIR_ORCHESTRATOR ──────────────── Repair & Recovery
     │
+Layer 2.5 ─ UI_UX_DESIGNER ────────────────────── UI/UX Design & Presentation
+    │
 Layer 2 ─── PROJECT_PLANNER, CHANGE_PLANNER ───── Planning
     │
 Layer 1.5 ─ PLANNING_ALIGNMENT_AGENT ──────────── Human Alignment & Validation
@@ -58,6 +60,7 @@ Layer 0 ─── ENGINEERING_MEMORY_MANAGER ────────── Memo
 - PLANNING_ALIGNMENT_AGENT
 - PROJECT_PLANNER
 - CHANGE_PLANNER
+- UI_UX_DESIGNER
 - QA_REVIEW_AGENT (review phase)
 - REPAIR_ORCHESTRATOR
 
@@ -80,7 +83,7 @@ Layer 0 ─── ENGINEERING_MEMORY_MANAGER ────────── Memo
 ```
 project-root/
 ├── .agents/                    # Skill definitions & system state
-│   ├── skills/                 # 12 Skill definitions (read-only)
+│   ├── skills/                 # 13 Skill definitions (read-only)
 │   │   ├── ENGINEERING_MEMORY_MANAGER/Skill.md
 │   │   ├── PRD_ANALYZER/Skill.md
 │   │   ├── SOURCE_CODE_ANALYZER/Skill.md
@@ -88,6 +91,7 @@ project-root/
 │   │   ├── PLANNING_ALIGNMENT_AGENT/Skill.md
 │   │   ├── PROJECT_PLANNER/Skill.md
 │   │   ├── CHANGE_PLANNER/Skill.md
+│   │   ├── UI_UX_DESIGNER/Skill.md
 │   │   ├── EXECUTION_ORCHESTRATOR/Skill.md
 │   │   ├── QA_REVIEW_AGENT/Skill.md
 │   │   ├── REPAIR_ORCHESTRATOR/Skill.md
@@ -117,6 +121,8 @@ project-root/
 │   ├── MVP_SCOPE_BOUNDARY.md
 │   ├── PROJECT_PLAN.md
 │   ├── MODIFICATION_PLAN.md
+│   ├── UI_STYLE_CONFIRMATION.md
+│   ├── UI_UX_SPEC.md
 │   ├── CODE_REVIEW_REPORT.md
 │   └── ...
 ├── project/                    # Actual project code
@@ -187,12 +193,23 @@ project-root/
 - **When to use**: After understanding existing code and requirements; human alignment for high-impact changes
 - **Skill file**: `.agents/skills/CHANGE_PLANNER/Skill.md`
 
+### Layer 2.5 — UI/UX Design (Slow Thinking, with Fast guardrails)
+
+#### UI_UX_DESIGNER
+- **Input**: `docs/PROJECT_PLAN.md` or `docs/MODIFICATION_PLAN.md` + requirements documents
+- **Output**: `docs/UI_STYLE_CONFIRMATION.md` (human answers) + `docs/UI_UX_SPEC.md`
+- **When to use**: After Layer 2 planning completes, BEFORE Layer 3 execution begins
+- **Skill file**: `.agents/skills/UI_UX_DESIGNER/Skill.md`
+- **Purpose**: Run a mandatory human alignment on presentation form and aesthetic direction (minimal, dark, flashy, corporate, playful, editorial, retro); analyze and decide the presentation form (CLI, TUI, web, data app, desktop, mobile, API-only); design information architecture, layout system, visual style guide, component inventory, and interaction states
+- **Blocking Rule**: EXECUTION is BLOCKED until `docs/UI_STYLE_CONFIRMATION.md` is fully confirmed by the human AND `docs/UI_UX_SPEC.md` exists. The decision must be recorded even for CLI-only or no-UI projects.
+- **Quality Bar**: Prevents "element piling" and generic-AI aesthetics — frontend output must follow the spec's layout skeleton, design tokens, component inventory, and the embedded Frontend Craft Standard (distilled from Anthropic's open-source `frontend-design` skill)
+
 ### Layer 3 — Execution (Fast Thinking)
 
 #### EXECUTION_ORCHESTRATOR
-- **Input**: `docs/PROJECT_PLAN.md` or `docs/MODIFICATION_PLAN.md`
+- **Input**: `docs/PROJECT_PLAN.md` or `docs/MODIFICATION_PLAN.md` + `docs/UI_UX_SPEC.md`
 - **Output**: Code in `project/` directory
-- **When to use**: After planning is complete
+- **When to use**: After planning and UI/UX design are complete
 - **Skill file**: `.agents/skills/EXECUTION_ORCHESTRATOR/Skill.md`
 
 ### Layer 4 — Validation (Both)
@@ -243,6 +260,11 @@ User provides PRD
     │                                    (using ONLY confirmed choices)
     │
     ▼
+[Slow] UI_UX_DESIGNER ─────────────────► docs/UI_STYLE_CONFIRMATION.md
+    │    (human style alignment)         docs/UI_UX_SPEC.md
+    │                                    (presentation form + style guide)
+    │
+    ▼
 [Fast] EXECUTION_ORCHESTRATOR ─────────► project/ (code)
     │
     ▼
@@ -275,6 +297,11 @@ User provides existing codebase + change request
 [Slow] CHANGE_PLANNER ─────────────────► docs/MODIFICATION_PLAN.md
     │
     ▼
+[Slow] UI_UX_DESIGNER ─────────────────► docs/UI_STYLE_CONFIRMATION.md
+    │    (human style alignment)         docs/UI_UX_SPEC.md
+    │                                    (matches existing style baseline)
+    │
+    ▼
 [Fast] EXECUTION_ORCHESTRATOR ─────────► project/ (modified code)
     │
     ▼
@@ -296,6 +323,12 @@ Architecture violations, missing features, scope creep, technical infeasibility
 
 ### QA → Alignment (Layer 4 → Layer 1.5)
 Business logic mismatch, user journey failure, AI behavior drift
+
+### QA → Design (Layer 4 → Layer 2.5)
+UI/UX inconsistency, styling drift from UI_UX_SPEC.md, missing interaction states, element piling detected
+
+### Execution → Design (Layer 3 → Layer 2.5)
+UI spec gap discovered, new screen required that is not in the spec, component inventory insufficient
 
 ### Execution → Planning (Layer 3 → Layer 2)
 Infeasible requirements, architecture conflicts, dependency incompatibility
@@ -332,12 +365,12 @@ The `agent` CLI tool enforces workflow rules programmatically:
 ### Phase Transition Rules
 
 ```
-idle → understanding → alignment → planning → execution → validation → release → completed
+idle → understanding → alignment → planning → design → execution → validation → repair → release → completed
 ```
 
 Feedback loops:
-- validation → execution, planning, alignment
-- execution → planning, alignment
+- validation → execution, planning, alignment, design
+- execution → planning, alignment, design
 - release → execution
 - planning → alignment
 - alignment → understanding
@@ -353,13 +386,13 @@ When this file is loaded, you must:
    Which workflow would you like to execute?
 
    A) Greenfield - New project from PRD (Human-Aligned)
-      Layers: 1(PRD) → 1.5(Alignment) → Human Confirmation → 2(Plan) → 3(Execute) → 4(Validate) → 5(Release)
+      Layers: 1(PRD) → 1.5(Alignment) → Human Confirmation → 2(Plan) → 2.5(UI/UX Design) → 3(Execute) → 4(Validate) → 5(Release)
 
    B) Brownfield - Modify existing project
-      Layers: 1(Analyze) → 1(Requirements) → 1.5(Alignment for high-impact) → Human Confirmation → 2(Change Plan) → 3(Execute) → 4(Validate) → 5(Release)
+      Layers: 1(Analyze) → 1(Requirements) → 1.5(Alignment for high-impact) → Human Confirmation → 2(Change Plan) → 2.5(UI/UX Design) → 3(Execute) → 4(Validate) → 5(Release)
 
    C) Specific Layer - Execute only one layer
-      Available: Layer 0-5 (including Layer 1.5)
+      Available: Layer 0-5 (including Layer 1.5 and Layer 2.5)
 
    D) Full Auto - I will guide you through all layers
    ```
@@ -376,19 +409,20 @@ When this file is loaded, you must:
 ## System Rules
 
 1. **No Skipping Planning**: Must complete Layer 1-1.5-2 before Layer 3
-2. **No Skipping Human Alignment**: Layer 1.5 MUST complete before Layer 2 in Greenfield workflow
-3. **No Autonomous Assumptions**: PROJECT_PLANNER must NOT assume architecture, stack, or deployment without human confirmation
-4. **No Direct High-Risk Changes**: High-risk modules require manual confirmation
-5. **Always Update Logs**: Every modification must update hot log
-6. **Read Compressed Context First**: Before starting, check `.agents/context/`
-7. **Update State**: After each action, update `.agents/state/current_phase.json`
-8. **Use `agent phase next` to advance phases**: Do not skip prerequisites
-9. **Use `agent phase back` for feedback loops**: When issues are discovered, go back to the appropriate phase
-10. **Use `agent validate` to check readiness**: Before starting a phase, validate that prerequisites are met
-11. **Register risks with `agent risk add`**: When risks are identified, register them programmatically
-12. **Resolve risks before advancing**: Critical/high risks block execution/validation/release phases
-13. **Use `agent block` to halt workflow**: When manual review is needed, block the phase explicitly
-14. **Check `agent decision` before release**: Deployment decision engine determines release readiness
+2. **No Skipping UI/UX Design**: Layer 2.5 MUST complete before Layer 3; the human MUST confirm presentation form and aesthetic direction (`docs/UI_STYLE_CONFIRMATION.md`), and `docs/UI_UX_SPEC.md` must exist before any UI code is written
+3. **No Skipping Human Alignment**: Layer 1.5 MUST complete before Layer 2 in Greenfield workflow
+4. **No Autonomous Assumptions**: PROJECT_PLANNER must NOT assume architecture, stack, or deployment without human confirmation
+5. **No Direct High-Risk Changes**: High-risk modules require manual confirmation
+6. **Always Update Logs**: Every modification must update hot log
+7. **Read Compressed Context First**: Before starting, check `.agents/context/`
+8. **Update State**: After each action, update `.agents/state/current_phase.json`
+9. **Use `agent phase next` to advance phases**: Do not skip prerequisites
+10. **Use `agent phase back` for feedback loops**: When issues are discovered, go back to the appropriate phase
+11. **Use `agent validate` to check readiness**: Before starting a phase, validate that prerequisites are met
+12. **Register risks with `agent risk add`**: When risks are identified, register them programmatically
+13. **Resolve risks before advancing**: Critical/high risks block execution/validation/release phases
+14. **Use `agent block` to halt workflow**: When manual review is needed, block the phase explicitly
+15. **Check `agent decision` before release**: Deployment decision engine determines release readiness
 
 ## Context Protocol
 
@@ -404,7 +438,8 @@ When this file is loaded, you must:
 2. Read `.agents/state/active_tasks.json`
 3. Read `.agents/logs/hot/` for recent context
 4. Read `docs/PROJECT_PLAN.md` or `docs/MODIFICATION_PLAN.md`
-5. Execute and update state
+5. Read `docs/UI_UX_SPEC.md` (binding for any frontend/UI work)
+6. Execute and update state
 
 ## Risk Protocol
 

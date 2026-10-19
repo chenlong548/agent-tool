@@ -28,8 +28,8 @@ jobs:
             & "$env:GITHUB_WORKSPACE\core\agent.ps1" status
             & "$env:GITHUB_WORKSPACE\core\agent.ps1" phase next understanding
             $skillCount = (Get-ChildItem ".agents\skills" -Directory).Count
-            if ($skillCount -ne 12) {
-              throw "Expected 12 skills, found $skillCount"
+            if ($skillCount -ne 13) {
+              throw "Expected 13 skills, found $skillCount"
             }
             foreach ($path in @(
               ".agents\state\blocked_tasks.json",

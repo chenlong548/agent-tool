@@ -95,6 +95,11 @@ You MUST use ONLY the choices confirmed in the human alignment phase.
 - Plan milestones
 - Establish timeline
 
+### Boundary with UI/UX Design
+- Do NOT finalize page-level UI design here (layouts, style guides, component lists)
+- Presentation form analysis and UI/UX design are owned by `UI_UX_DESIGNER` (Layer 2.5), which runs after planning
+- The plan may reference the confirmed technology family (e.g., web, CLI) but the concrete UI spec is produced in Layer 2.5
+
 ## Output Structure
 
 PROJECT_PLAN.md includes:

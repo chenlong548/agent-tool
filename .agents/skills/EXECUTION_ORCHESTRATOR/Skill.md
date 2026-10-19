@@ -11,9 +11,20 @@ description: "Execution orchestrator that executes PROJECT_PLAN or MODIFICATION_
 
 ## Execution Scope
 
-**Input**: `docs/PROJECT_PLAN.md` or `docs/MODIFICATION_PLAN.md`
+**Input**: `docs/PROJECT_PLAN.md` or `docs/MODIFICATION_PLAN.md` + `docs/UI_UX_SPEC.md`
 
 **Output**: Code in `project/` directory with test coverage
+
+## UI/UX Spec Compliance
+
+`docs/UI_UX_SPEC.md` is BINDING for all frontend/UI work:
+
+- Read `docs/UI_UX_SPEC.md` BEFORE writing any UI code
+- Implement the style foundation first (design tokens, layout system, base components), then screens
+- Compose screens from the spec's component inventory; a new component requires a spec update first
+- Match the spec's layout skeleton, spacing scale, and visual hierarchy — do NOT assemble pages from default-styled widgets ("element piling")
+- Implement every defined interaction state (loading / empty / error / success)
+- Frontend work is NOT complete while any anti-piling checklist item in the spec fails
 
 ## Output Directory
 
@@ -136,9 +147,10 @@ After execution, update:
 
 1. Read `.agents/state/current_phase.json`
 2. Read `docs/PROJECT_PLAN.md` or `docs/MODIFICATION_PLAN.md`
-3. Read `.agents/logs/hot/` for recent context
-4. Execute and update state
-5. Write code to `project/`
+3. Read `docs/UI_UX_SPEC.md` (binding for any frontend/UI work)
+4. Read `.agents/logs/hot/` for recent context
+5. Execute and update state
+6. Write code to `project/`
 
 ## Execution Principles
 

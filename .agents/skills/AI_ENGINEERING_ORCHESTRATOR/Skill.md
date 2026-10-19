@@ -44,7 +44,7 @@ This skill coordinates the full AI engineering workflow. It is responsible for s
 
 ## Skill Registry
 
-Agent Tool v4.0 includes 12 skills across 7 layers:
+Agent Tool v4.0 includes 13 skills across 7 layers:
 
 - `ENGINEERING_MEMORY_MANAGER`
 - `PRD_ANALYZER`
@@ -53,6 +53,7 @@ Agent Tool v4.0 includes 12 skills across 7 layers:
 - `PLANNING_ALIGNMENT_AGENT`
 - `PROJECT_PLANNER`
 - `CHANGE_PLANNER`
+- `UI_UX_DESIGNER`
 - `EXECUTION_ORCHESTRATOR`
 - `QA_REVIEW_AGENT`
 - `REPAIR_ORCHESTRATOR`
@@ -68,6 +69,7 @@ PRD_ANALYZER
 -> PLANNING_ALIGNMENT_AGENT
 -> Human Confirmation
 -> PROJECT_PLANNER
+-> UI_UX_DESIGNER (+ Human Style Confirmation: form + aesthetic direction)
 -> EXECUTION_ORCHESTRATOR
 -> QA_REVIEW_AGENT
 -> REPAIR_ORCHESTRATOR (when needed)
@@ -82,6 +84,7 @@ SOURCE_CODE_ANALYZER
 -> PLANNING_ALIGNMENT_AGENT (for high-impact changes)
 -> Human Confirmation (when required)
 -> CHANGE_PLANNER
+-> UI_UX_DESIGNER (+ Human Style Confirmation: form + aesthetic direction)
 -> EXECUTION_ORCHESTRATOR
 -> QA_REVIEW_AGENT
 -> REPAIR_ORCHESTRATOR (when needed)

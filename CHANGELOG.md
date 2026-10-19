@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Added: UI style human alignment gate. Layer 2.5 now requires the human to confirm
+  presentation form and aesthetic direction (minimal / dark / flashy / corporate /
+  playful / editorial / retro, color mode, motion level, density) recorded in
+  `docs/UI_STYLE_CONFIRMATION.md` before `UI_UX_SPEC.md` is generated; `agent phase next
+  execution` blocks on a missing or unconfirmed confirmation file.
+- Added: Frontend Craft Standard embedded in `UI_UX_DESIGNER`, distilled from Anthropic's
+  open-source `frontend-design` skill (Apache 2.0) plus Web Interface Guidelines:
+  anti-generic-AI-tell rules, typography craft, restrained motion, quality floor, and a
+  self-critique pass — binding for both spec and implementation.
+- Added: new `UI_UX_DESIGNER` skill as Layer 2.5 with a mandatory `design` phase between
+  planning and execution. The layer analyzes and records the presentation form decision
+  (CLI, TUI, Streamlit-style data app, server-rendered web, SPA, desktop, mobile, API-only)
+  and produces `docs/UI_UX_SPEC.md` (information architecture, layout system, design tokens,
+  component inventory, interaction states) to prevent unstyled "element piling" frontend
+  output. `agent phase next execution` is now blocked until `UI_UX_SPEC.md` exists, planning
+  can no longer transition directly to execution, and QA routes UI conformance findings back
+  to the design phase.
 - Fixed: `Add-Risk` / `Add-BlockedTask` return values were not captured at three call sites, so a
   stray `System.Collections.Hashtable` was printed on screen and `Add-RetryAttempt` returned a
   3-element array instead of a single object when escalation triggered.

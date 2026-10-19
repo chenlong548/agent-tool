@@ -1,7 +1,7 @@
 <#
 Agent Tool - AI Engineering Workflow Engine
 Version: 4.0
-Description: Workflow engine that manages 12 AI engineering skills across 7 layers with programmatic phase validation, human alignment enforcement, feedback loop support, validation severity system, deployment decision engine, log rotation, workflow metrics, state-driven workflow, Repair Orchestration, Regression Protection, Retry Budget, Human Escalation.
+Description: Workflow engine that manages 13 AI engineering skills across 7 layers with programmatic phase validation, human alignment enforcement, UI/UX design gate, feedback loop support, validation severity system, deployment decision engine, log rotation, workflow metrics, state-driven workflow, Repair Orchestration, Regression Protection, Retry Budget, Human Escalation.
 #>
 
 $agentsDir = ".agents"
@@ -18,16 +18,17 @@ $executionStateFile = "$stateDir\execution_state.json"
 $metricsFile = "$stateDir\workflow_metrics.json"
 $retryBudgetFile = "$stateDir\retry_budget.json"
 
-$validPhases = @("idle", "understanding", "alignment", "planning", "execution", "validation", "repair", "release", "completed")
+$validPhases = @("idle", "understanding", "alignment", "planning", "design", "execution", "validation", "repair", "release", "completed")
 
 $phaseTransitions = @{
     "idle"        = @("understanding")
     "understanding" = @("alignment", "planning")
     "alignment"  = @("planning", "understanding")
-    "planning"   = @("execution", "alignment")
-    "execution"  = @("validation", "planning", "alignment")
-    "validation" = @("release", "repair", "execution", "planning", "alignment")
-    "repair"     = @("execution", "validation", "planning", "alignment")
+    "planning"   = @("design", "alignment")
+    "design"     = @("execution", "planning")
+    "execution"  = @("validation", "planning", "alignment", "design")
+    "validation" = @("release", "repair", "execution", "planning", "alignment", "design")
+    "repair"     = @("execution", "validation", "planning", "alignment", "design")
     "release"    = @("completed", "execution")
     "completed"  = @("idle")
 }
@@ -37,9 +38,9 @@ $phaseTransitions = @{
 # `phase next` so the transition log and the workflow metrics record it as an advance
 # rather than as a feedback loop.
 $feedbackLoops = @(
-    "validation->execution", "validation->planning", "validation->alignment", "validation->repair",
-    "repair->execution", "repair->validation", "repair->planning", "repair->alignment",
-    "execution->planning", "execution->alignment",
+    "validation->execution", "validation->planning", "validation->alignment", "validation->repair", "validation->design",
+    "repair->execution", "repair->validation", "repair->planning", "repair->alignment", "repair->design",
+    "execution->planning", "execution->alignment", "execution->design",
     "release->execution",
     "completed->idle"
 )
@@ -49,6 +50,7 @@ $phaseLabels = @{
     "understanding" = "Layer 1 - Understanding"
     "alignment"  = "Layer 1.5 - Human Alignment"
     "planning"   = "Layer 2 - Planning"
+    "design"     = "Layer 2.5 - UI/UX Design"
     "execution"  = "Layer 3 - Execution"
     "validation" = "Layer 4 - Validation"
     "repair"     = "Layer 3.5 - Repair & Recovery"
@@ -456,9 +458,26 @@ function Test-PhasePrerequisites {
         }
     }
 
+    elseif ($targetPhase -eq "design") {
+        if (-not (Test-Path "$docsDir\PROJECT_PLAN.md") -and -not (Test-Path "$docsDir\MODIFICATION_PLAN.md")) {
+            $errors += "No plan document found. Complete Layer 2 (Planning) first."
+        }
+    }
+
     elseif ($targetPhase -eq "execution") {
         if (-not (Test-Path "$docsDir\PROJECT_PLAN.md") -and -not (Test-Path "$docsDir\MODIFICATION_PLAN.md")) {
             $errors += "No plan document found. Complete Layer 2 (Planning) first."
+        }
+        if (-not (Test-Path "$docsDir\UI_UX_SPEC.md")) {
+            $errors += "UI_UX_SPEC.md not found. Complete Layer 2.5 (Design) first. The presentation decision must be recorded even for CLI-only projects."
+        }
+        if (-not (Test-Path "$docsDir\UI_STYLE_CONFIRMATION.md")) {
+            $errors += "UI_STYLE_CONFIRMATION.md not found. Human must confirm presentation form and aesthetic direction (Layer 2.5 alignment) before execution."
+        } else {
+            $uiConfirmation = Get-Content "$docsDir\UI_STYLE_CONFIRMATION.md" -Raw
+            if ($uiConfirmation -match "\[ \]" -or $uiConfirmation -match "pending|unconfirmed|not.confirmed") {
+                $errors += "UI_STYLE_CONFIRMATION.md has unconfirmed items. Human confirmation of form and style is required before execution."
+            }
         }
     }
 
@@ -752,7 +771,7 @@ if ($command -eq "init") {
 
     Write-Log "Initialization completed!"
     Write-Host ""
-    Write-Host "  .agents/skills/   - 12 Skill definitions"
+    Write-Host "  .agents/skills/   - 13 Skill definitions"
     Write-Host "  .agents/state/    - Workflow state machine (phase + risks + blocks + metrics)"
     Write-Host "  .agents/context/  - Compressed long-term context"
     Write-Host "  .agents/logs/     - Execution logs (hot/warm/cold with auto-rotation)"
@@ -1502,19 +1521,22 @@ if ($command -eq "init") {
     Write-Host "  help                       Show this help message"
     Write-Host ""
     Write-Host "Workflow Phases:"
-    Write-Host "  idle -> understanding -> alignment -> planning -> execution -> validation -> repair -> release -> completed"
+    Write-Host "  idle -> understanding -> alignment -> planning -> design -> execution -> validation -> repair -> release -> completed"
     Write-Host ""
     Write-Host "Feedback Loops:"
     Write-Host "  validation -> execution    (fix code issues)"
     Write-Host "  validation -> planning     (plan adjustment needed)"
     Write-Host "  validation -> alignment    (business logic mismatch)"
     Write-Host "  validation -> repair       (QA issues require repair)"
+    Write-Host "  validation -> design       (UI/UX inconsistency found)"
     Write-Host "  repair     -> execution    (apply fixes)"
     Write-Host "  repair     -> validation   (re-validate after fix)"
     Write-Host "  repair     -> planning     (plan adjustment needed)"
     Write-Host "  repair     -> alignment    (requirements mismatch)"
+    Write-Host "  repair     -> design       (UI repair needs redesign)"
     Write-Host "  execution  -> planning     (plan infeasible)"
     Write-Host "  execution  -> alignment    (hidden requirements found)"
+    Write-Host "  execution  -> design       (UI spec gap found)"
     Write-Host "  release    -> execution    (deployment issues)"
     Write-Host ""
     Write-Host "Deployment Decisions:"
